@@ -580,4 +580,30 @@ static inline int musb_platform_exit(struct musb *musb)
 	return musb->ops->exit(musb);
 }
 
+/*
+ * register shadow for suspend
+ */
+struct dsps_context {
+    u32 control;
+    u32 epintr;
+    u32 coreintr;
+    u32 phy_utmi;
+    u32 mode;
+    u32 tx_mode;
+    u32 rx_mode;
+};
+
+/**
+ * DSPS glue structure.
+ */
+struct dsps_glue {
+    struct device *dev;
+    struct platform_device *musb;   /* child musb pdev */
+    const struct dsps_musb_wrapper *wrp; /* wrapper register offsets */
+    struct timer_list timer;    /* otg_workaround timer */
+    unsigned long last_timer;    /* last timer data for each instance */
+
+    struct dsps_context context;
+};
+
 #endif	/* __MUSB_CORE_H__ */

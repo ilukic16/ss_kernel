@@ -113,31 +113,6 @@ struct dsps_musb_wrapper {
 	u8		poll_seconds;
 };
 
-/*
- * register shadow for suspend
- */
-struct dsps_context {
-	u32 control;
-	u32 epintr;
-	u32 coreintr;
-	u32 phy_utmi;
-	u32 mode;
-	u32 tx_mode;
-	u32 rx_mode;
-};
-
-/**
- * DSPS glue structure.
- */
-struct dsps_glue {
-	struct device *dev;
-	struct platform_device *musb;	/* child musb pdev */
-	const struct dsps_musb_wrapper *wrp; /* wrapper register offsets */
-	struct timer_list timer;	/* otg_workaround timer */
-	unsigned long last_timer;    /* last timer data for each instance */
-
-	struct dsps_context context;
-};
 
 static void dsps_musb_try_idle(struct musb *musb, unsigned long timeout);
 
@@ -186,12 +161,6 @@ static void dsps_musb_disable(struct musb *musb)
 static void otg_timer(unsigned long _musb)
 {
 	struct musb *musb = (void *)_musb;
-
-	if (!musb || musb->suspended)
-	{
-	    return;
-	}
-
 	void __iomem *mregs = musb->mregs;
 	struct device *dev = musb->controller;
 	struct dsps_glue *glue = dev_get_drvdata(dev->parent);
