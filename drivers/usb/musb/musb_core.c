@@ -123,6 +123,10 @@ MODULE_LICENSE("GPL");
 MODULE_ALIAS("platform:" MUSB_DRIVER_NAME);
 static DEFINE_IDA(musb_ida);
 
+static int log_dma = 0;
+module_param(log_dma, int, 0655);
+MODULE_PARM_DESC(log_dma, "DMA logging flag");
+
 /*-------------------------------------------------------------------------*/
 
 static inline struct musb *dev_to_musb(struct device *dev)
@@ -2103,6 +2107,7 @@ static int musb_remove(struct platform_device *pdev)
 
 static void musb_save_context(struct musb *musb)
 {
+    printk(KERN_ERR "%s(%d)!\n", __FUNCTION__, __LINE__);
 	int i;
 	void __iomem *musb_base = musb->mregs;
 	void __iomem *epio;
@@ -2125,6 +2130,8 @@ static void musb_save_context(struct musb *musb)
 		epio = hw_ep->regs;
 		if (!epio)
 			continue;
+
+//		printk(KERN_ERR "%s(%d): %d/%d, hw_ep = 0x%08X, epio = 0x%08X\n", __FUNCTION__, __LINE__, i, musb->config->num_eps, hw_ep, epio);
 
 		musb_writeb(musb_base, MUSB_INDEX, i);
 		musb->context.index_regs[i].txmaxp =
@@ -2174,6 +2181,7 @@ static void musb_save_context(struct musb *musb)
 
 static void musb_restore_context(struct musb *musb)
 {
+    printk(KERN_ERR "%s(%d):\n", __FUNCTION__, __LINE__);
 	int i;
 	void __iomem *musb_base = musb->mregs;
 	void __iomem *ep_target_regs;
@@ -2207,6 +2215,8 @@ static void musb_restore_context(struct musb *musb)
 		if (!epio)
 			continue;
 
+//        printk(KERN_ERR "%s(%d): %d/%d, hw_ep = 0x%08X, epio = 0x%08X\n", __FUNCTION__, __LINE__, i, musb->config->num_eps, hw_ep, epio);
+
 		musb_writeb(musb_base, MUSB_INDEX, i);
 		musb_writew(epio, MUSB_TXMAXP,
 			musb->context.index_regs[i].txmaxp);
@@ -2235,7 +2245,6 @@ static void musb_restore_context(struct musb *musb)
 		musb_writeb(epio, MUSB_RXTYPE,
 				musb->context.index_regs[i].rxtype);
 		musb_writeb(epio, MUSB_RXINTERVAL,
-
 				musb->context.index_regs[i].rxinterval);
 		musb_write_txfunaddr(musb_base, i,
 				musb->context.index_regs[i].txfunaddr);
@@ -2257,8 +2266,16 @@ static void musb_restore_context(struct musb *musb)
 	musb_writeb(musb_base, MUSB_INDEX, musb->context.index);
 }
 
+bool print_dma_info = 0;
+
 static int musb_suspend(struct device *dev)
 {
+    printk(KERN_ERR "%s(%d)\n", __FUNCTION__, __LINE__);
+    if (log_dma == 10)
+        print_dma_info = 1;
+    else
+        print_dma_info = 0;
+
 	struct musb	*musb = dev_to_musb(dev);
 	unsigned long	flags;
 
@@ -2268,14 +2285,30 @@ static int musb_suspend(struct device *dev)
 		/* FIXME force disconnect unless we know USB will wake
 		 * the system up quickly enough to respond ...
 		 */
+
+	    printk(KERN_ERR "%s(%d) pheripheral is active!\n", __FUNCTION__, __LINE__);
 	} else if (is_host_active(musb)) {
 		/* we know all the children are suspended; sometimes
 		 * they will even be wakeup-enabled.
 		 */
+        printk(KERN_ERR "%s(%d) host is active!\n", __FUNCTION__, __LINE__);
 	}
 
 	if (musb->suspended)
+	{
+        printk(KERN_ERR "%s(%d) musb suspended!\n", __FUNCTION__, __LINE__);
 		goto exit;
+	}
+	else
+	{
+	    printk(KERN_ERR "%s(%d): Canceling work\n", __FUNCTION__, __LINE__);
+
+	    if (musb->dma_controller)
+	    {
+	        printk(KERN_ERR "%s(%d): Stop timer\n", __FUNCTION__, __LINE__);
+	        dma_controller_cancel_hrtimer(musb->dma_controller);
+	    }
+	}
 
 	musb_save_context(musb);
 	musb->suspended = true;
@@ -2287,7 +2320,13 @@ exit:
 
 static int musb_resume_noirq(struct device *dev)
 {
-	struct musb	*musb = dev_to_musb(dev);
+    printk(KERN_ERR "%s(%d)\n", __FUNCTION__, __LINE__);
+    if (log_dma == 10)
+        print_dma_info = 1;
+    else
+        print_dma_info = 0;
+
+    struct musb	*musb = dev_to_musb(dev);
 
 	/*
 	 * For static cmos like DaVinci, register values were preserved
@@ -2300,9 +2339,16 @@ static int musb_resume_noirq(struct device *dev)
 	 */
 
 	if (!musb->suspended)
+	{
+	    printk(KERN_ERR "%s(%d) musb_not suspended\n", __FUNCTION__, __LINE__);
 		return 0;
+	}
+    else
+    {
+        printk(KERN_ERR "%s(%d) restoring!\n", __FUNCTION__, __LINE__);
+    }
 
-	musb_restore_context(musb);
+    musb_restore_context(musb);
 	musb->suspended = false;
 
 	pm_runtime_disable(dev);
@@ -2314,11 +2360,30 @@ static int musb_resume_noirq(struct device *dev)
 
 static int musb_runtime_suspend(struct device *dev)
 {
-	struct musb	*musb = dev_to_musb(dev);
+    printk(KERN_ERR "%s(%d)\n", __FUNCTION__, __LINE__);
+    if (log_dma == 10)
+        print_dma_info = 1;
+    else
+        print_dma_info = 0;
+
+    struct musb	*musb = dev_to_musb(dev);
 
 	dev_dbg(dev, "%s\n", __func__);
 	if (musb->suspended)
-		return 0;
+    {
+        printk(KERN_ERR "%s(%d) musb is suspended active!\n", __FUNCTION__, __LINE__);
+        return 0;
+    }
+    else
+    {
+        printk(KERN_ERR "%s(%d): Canceling work\n", __FUNCTION__, __LINE__);
+
+        if (musb->dma_controller)
+        {
+            printk(KERN_ERR "%s(%d): Stop timer\n", __FUNCTION__, __LINE__);
+            dma_controller_cancel_hrtimer(musb->dma_controller);
+        }
+    }
 
 	musb_save_context(musb);
 	musb->suspended = true;
@@ -2328,14 +2393,28 @@ static int musb_runtime_suspend(struct device *dev)
 
 static int musb_runtime_resume(struct device *dev)
 {
-	struct musb	*musb = dev_to_musb(dev);
+    printk(KERN_ERR "%s(%d)\n", __FUNCTION__, __LINE__);
+    if (log_dma == 10)
+        print_dma_info = 1;
+    else
+        print_dma_info = 0;
+
+    struct musb	*musb = dev_to_musb(dev);
 
 	dev_dbg(dev, "%s\n", __func__);
 	if (!musb->suspended)
+	{
+        printk(KERN_ERR "%s(%d) musb not suspended!\n", __FUNCTION__, __LINE__);
 		return 0;
+	}
+	else
+	{
+	    printk(KERN_ERR "%s(%d) restoring!\n", __FUNCTION__, __LINE__);
+	}
 
-	musb_restore_context(musb);
+    musb_restore_context(musb);
 	musb->suspended = false;
+
 
 	return 0;
 }

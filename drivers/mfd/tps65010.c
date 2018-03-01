@@ -321,6 +321,8 @@ static void tps65010_interrupt(struct tps65010 *tps)
 {
 	u8 tmp = 0, mask, poll;
 
+	pr_debug("%s(%d): interrupt poll!\n", __FUNCTION__, __LINE__);
+
 	/* IRQs won't trigger for certain events, but we can get
 	 * others by polling (normally, with external power applied).
 	 */
@@ -411,6 +413,8 @@ static void tps65010_work(struct work_struct *work)
 {
 	struct tps65010		*tps;
 
+	pr_debug("%s(%d): work!\n", __FUNCTION__, __LINE__);
+
 	tps = container_of(to_delayed_work(work), struct tps65010, work);
 	mutex_lock(&tps->lock);
 
@@ -446,6 +450,8 @@ static void tps65010_work(struct work_struct *work)
 static irqreturn_t tps65010_irq(int irq, void *_tps)
 {
 	struct tps65010		*tps = _tps;
+
+	pr_debug("%s(%d): irq = %d\n", __FUNCTION__, __LINE__, irq);
 
 	disable_irq_nosync(irq);
 	set_bit(FLAG_IRQ_ENABLE, &tps->flags);

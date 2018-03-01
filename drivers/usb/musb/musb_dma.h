@@ -190,6 +190,7 @@ static inline void dma_controller_destroy(struct dma_controller *d) { }
 extern struct dma_controller *dma_controller_create(struct musb *, void __iomem *);
 
 extern void dma_controller_destroy(struct dma_controller *);
+extern void dma_controller_cancel_hrtimer(struct dma_controller *);
 #endif
 
 #endif	/* __MUSB_DMA_H__ */

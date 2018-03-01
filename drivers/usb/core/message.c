@@ -30,7 +30,20 @@ static void usb_api_blocking_completion(struct urb *urb)
 {
 	struct api_context *ctx = urb->context;
 
+	// check buffer content when error is EPROTO
+	// check if device is wanted and sequence number (e.g. 11th message, control bits etc.)
+	// urb->transfer_buffer
+
+	// check if serial number is available first
+
+//	if (urb-status == EPROTO)
+//	{
+//		urb->
+//	}
+
 	ctx->status = urb->status;
+//    printk(KERN_ERR "%s(%d): complete > urb->status = %d, S/N = %s, prod = %s, urbnum = %d\n", __FUNCTION__, __LINE__,
+//    		urb->status, urb->dev->serial, urb->dev->product, urb->dev->urbnum.counter);
 	complete(&ctx->done);
 }
 
@@ -51,6 +64,7 @@ static int usb_start_wait_urb(struct urb *urb, int timeout, int *actual_length)
 	urb->context = &ctx;
 	urb->actual_length = 0;
 	retval = usb_submit_urb(urb, GFP_NOIO);
+//	printk(KERN_ERR "%s(%d): retval = %d\n",__FUNCTION__, __LINE__, retval);
 	if (unlikely(retval))
 		goto out;
 
@@ -58,6 +72,7 @@ static int usb_start_wait_urb(struct urb *urb, int timeout, int *actual_length)
 	if (!wait_for_completion_timeout(&ctx.done, expire)) {
 		usb_kill_urb(urb);
 		retval = (ctx.status == -ENOENT ? -ETIMEDOUT : ctx.status);
+//		printk(KERN_ERR "%s(%d): retval = %d\n",__FUNCTION__, __LINE__, retval);
 
 		dev_dbg(&urb->dev->dev,
 			"%s timed out on ep%d%s len=%u/%u\n",
@@ -67,7 +82,10 @@ static int usb_start_wait_urb(struct urb *urb, int timeout, int *actual_length)
 			urb->actual_length,
 			urb->transfer_buffer_length);
 	} else
+	{
 		retval = ctx.status;
+//		printk(KERN_ERR "%s(%d): retval = %d\n",__FUNCTION__, __LINE__, retval);
+	}
 out:
 	if (actual_length)
 		*actual_length = urb->actual_length;
@@ -95,6 +113,7 @@ static int usb_internal_control_msg(struct usb_device *usb_dev,
 			     len, usb_api_blocking_completion, NULL);
 
 	retv = usb_start_wait_urb(urb, timeout, &length);
+//	printk(KERN_ERR "%s(%d): retv = %d\n",__FUNCTION__, __LINE__, retv);
 	if (retv < 0)
 		return retv;
 	else

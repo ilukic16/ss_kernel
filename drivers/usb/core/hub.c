@@ -27,6 +27,7 @@
 #include <linux/freezer.h>
 #include <linux/random.h>
 #include <linux/pm_qos.h>
+#include <linux/delay.h>
 
 #include <asm/uaccess.h>
 #include <asm/byteorder.h>
@@ -4100,11 +4101,15 @@ hub_port_init (struct usb_hub *hub, struct usb_device *udev, int port1,
 			 */
 			for (j = 0; j < 3; ++j) {
 				buf->bMaxPacketSize0 = 0;
+				// 50 ms
+//				msleep(50);
 				r = usb_control_msg(udev, usb_rcvaddr0pipe(),
 					USB_REQ_GET_DESCRIPTOR, USB_DIR_IN,
 					USB_DT_DEVICE << 8, 0,
 					buf, GET_DESCRIPTOR_BUFSIZE,
 					initial_descriptor_timeout);
+//				printk(KERN_ERR "%s(%d): r = %d, buf->bMaxPacketSize0 = %d, buf->bDescriptorType = %d\n",
+//						__FUNCTION__, __LINE__, r, buf->bMaxPacketSize0, buf->bDescriptorType);
 				switch (buf->bMaxPacketSize0) {
 				case 8: case 16: case 32: case 64: case 255:
 					if (buf->bDescriptorType ==
@@ -4136,7 +4141,7 @@ hub_port_init (struct usb_hub *hub, struct usb_device *udev, int port1,
 			}
 			if (r) {
 				if (r != -ENODEV)
-					dev_err(&udev->dev, "device descriptor read/64, error %d\n",
+					dev_err(&udev->dev, "device -> descriptor read/64, error %d\n",
 							r);
 				retval = -EMSGSIZE;
 				continue;

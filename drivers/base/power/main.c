@@ -353,8 +353,21 @@ static void pm_dev_err(struct device *dev, pm_message_t state, char *info,
 		dev_name(dev), pm_verb(state.event), info, error);
 }
 
+static int bt_cnt = 13;
+
 static void dpm_show_time(ktime_t starttime, pm_message_t state, char *info)
 {
+	printk(KERN_ERR "Suspend gotov!\n");
+//	if (--bt_cnt > 0)
+//	{
+//		printk(KERN_ERR "if: bt_cnt = %d!\n", bt_cnt);
+//		//dump_stack();
+//	}
+//	else
+//	{
+//		printk(KERN_ERR "else: bt_cnt = %d!\n", bt_cnt);
+//	}
+
 	ktime_t calltime;
 	u64 usecs64;
 	int usecs;
@@ -1181,6 +1194,7 @@ static int device_suspend(struct device *dev)
  */
 int dpm_suspend(pm_message_t state)
 {
+	printk(KERN_ERR "%s(%d): start!\n", __FUNCTION__, __LINE__);
 	ktime_t starttime = ktime_get();
 	int error = 0;
 
@@ -1195,6 +1209,12 @@ int dpm_suspend(pm_message_t state)
 		get_device(dev);
 		mutex_unlock(&dpm_list_mtx);
 
+//		if (dev && dev->driver && dev->driver->name)
+//			printk(KERN_ERR "%s\n", dev->driver->name);
+//		else if (dev && dev->driver)
+//			printk(KERN_ERR "dev = 0x%08X, driver = 0x%08X\n", dev, dev->driver);
+//		else
+//			printk(KERN_ERR "dev = 0x%08X\n", dev);
 		error = device_suspend(dev);
 
 		mutex_lock(&dpm_list_mtx);
@@ -1219,6 +1239,8 @@ int dpm_suspend(pm_message_t state)
 		dpm_save_failed_step(SUSPEND_SUSPEND);
 	} else
 		dpm_show_time(starttime, state, NULL);
+
+	printk(KERN_ERR "%s(%d): return!\n", __FUNCTION__, __LINE__);
 	return error;
 }
 

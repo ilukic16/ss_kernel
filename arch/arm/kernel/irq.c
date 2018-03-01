@@ -56,6 +56,9 @@ int arch_show_interrupts(struct seq_file *p, int prec)
 	return 0;
 }
 
+extern int print_info;
+static int print_cnt = 1;
+
 /*
  * handle_IRQ handles all hardware IRQ's.  Decoded IRQs should
  * not come via this function.  Instead, they should provide their
@@ -64,6 +67,18 @@ int arch_show_interrupts(struct seq_file *p, int prec)
  */
 void handle_IRQ(unsigned int irq, struct pt_regs *regs)
 {
+	if (irq == 174 || irq == 94 || irq == 93 || irq == 88)
+	{
+		if (irq != 88)
+		{
+			pr_debug("%s(%d): irq = %d\n", __FUNCTION__, __LINE__, irq);
+		}
+		else
+		{
+			pr_debug("%s(%d): irq = %d\n", __FUNCTION__, __LINE__, irq);
+		}
+//		print_info = ++print_cnt % 10;
+	}
 	struct pt_regs *old_regs = set_irq_regs(regs);
 
 	irq_enter();

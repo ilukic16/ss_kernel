@@ -186,6 +186,12 @@ static void dsps_musb_disable(struct musb *musb)
 static void otg_timer(unsigned long _musb)
 {
 	struct musb *musb = (void *)_musb;
+
+	if (!musb || musb->suspended)
+	{
+	    return;
+	}
+
 	void __iomem *mregs = musb->mregs;
 	struct device *dev = musb->controller;
 	struct dsps_glue *glue = dev_get_drvdata(dev->parent);
