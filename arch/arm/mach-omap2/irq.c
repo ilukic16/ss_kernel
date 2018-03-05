@@ -219,11 +219,8 @@ void __init ti81xx_init_irq(void)
 	omap_init_irq(OMAP34XX_IC_BASE, 128, NULL);
 }
 
-//int print_info = 0;
-
 static inline void omap_intc_handle_irq(void __iomem *base_addr, struct pt_regs *regs)
 {
-
 	u32 irqnr;
 
 	do {
@@ -252,18 +249,6 @@ out:
 		if (irqnr) {
 			u32 irq_hw = irqnr;
 			irqnr = irq_find_mapping(domain, irqnr);
-			if (irqnr == 174 || irqnr == 94 || irqnr == 93 || irqnr == 88)
-			{
-				if (irqnr != 88)
-				{
-					pr_debug("%s(%d): irq_hw = %d, irqnr = %d\n", __FUNCTION__, __LINE__, irq_hw, irqnr);
-				}
-				else
-				{
-					pr_debug("%s(%d): irq_hw = %d, irqnr = %d\n", __FUNCTION__, __LINE__, irq_hw, irqnr);
-				}
-	//			print_info = 1;
-			}
 			handle_IRQ(irqnr, regs);
 		}
 	} while (irqnr);

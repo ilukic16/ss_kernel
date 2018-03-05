@@ -1618,7 +1618,6 @@ static int unlink1(struct usb_hcd *hcd, struct urb *urb, int status)
  */
 int usb_hcd_unlink_urb (struct urb *urb, int status)
 {
-//    printk(KERN_ERR "%s(%d): \n", __FUNCTION__, __LINE__);
 	struct usb_hcd		*hcd;
 	int			retval = -EIDRM;
 	unsigned long		flags;
@@ -1645,7 +1644,6 @@ int usb_hcd_unlink_urb (struct urb *urb, int status)
 	else if (retval != -EIDRM && retval != -EBUSY)
 		dev_dbg(&urb->dev->dev, "hcd_unlink_urb %p fail %d\n",
 				urb, retval);
-//    printk(KERN_ERR "%s(%d): retval = %d\n", __FUNCTION__, __LINE__, retval);
 	return retval;
 }
 
@@ -1653,7 +1651,6 @@ int usb_hcd_unlink_urb (struct urb *urb, int status)
 
 static void __usb_hcd_giveback_urb(struct urb *urb)
 {
-//    printk(KERN_ERR "%s(%d): \n", __FUNCTION__, __LINE__);
 	struct usb_hcd *hcd = bus_to_hcd(urb->dev->bus);
 	int status = urb->unlinked;
 	unsigned long flags;
@@ -1670,8 +1667,6 @@ static void __usb_hcd_giveback_urb(struct urb *urb)
 
 	/* pass ownership to the completion handler */
 	urb->status = status;
-//    printk(KERN_ERR "%s(%d): urb->status = %d\n", __FUNCTION__, __LINE__, urb->status);
-
 
 	/*
 	 * We disable local IRQs here avoid possible deadlock because
@@ -1686,8 +1681,6 @@ static void __usb_hcd_giveback_urb(struct urb *urb)
 	local_irq_save(flags);
 	urb->complete(urb);
 	local_irq_restore(flags);
-
-//    printk(KERN_ERR "%s(%d): urb->status = %d\n", __FUNCTION__, __LINE__, urb->status);
 
 	atomic_dec(&urb->use_count);
 	if (unlikely(atomic_read(&urb->reject)))

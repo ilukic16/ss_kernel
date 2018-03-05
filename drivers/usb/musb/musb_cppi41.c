@@ -100,39 +100,12 @@ static void update_rx_toggle(struct cppi41_dma_channel *cppi41_channel)
 	cppi41_channel->usb_toggle = toggle;
 }
 
-extern bool print_dma_info;
-
 static bool musb_is_tx_fifo_empty(struct musb_hw_ep *hw_ep)
 {
 	u8		epnum = hw_ep->epnum;
 	struct musb	*musb = hw_ep->musb;
 	void __iomem	*epio = musb->endpoints[epnum].regs;
 	u16		csr;
-
-//    volatile int test_1 = -1;
-//    volatile int test_2 = 0;
-//    volatile int test_3 = -1;
-//    volatile int test_4 = 0;
-//    volatile int test_5 = -1;
-//    volatile int test_6 = 0;
-//    volatile int test_7 = -1;
-//    volatile int test_8 = 0;
-//    volatile int test_s = musb->suspended;
-
-//	mdelay(1);
-
-	if (print_dma_info)
-	{
-        if (musb->suspended)
-        {
-            printk(KERN_ERR "%s(%d) suspended!\n", __FUNCTION__, __LINE__);
-        }
-        else
-        {
-            printk(KERN_ERR "%s(%d) no suspend\n", __FUNCTION__, __LINE__);
-        }
-        printk(KERN_ERR "%s(%d): epnum = %d, musb = 0x%x, hw_ep = 0x%x, epio = 0x%x\n", __FUNCTION__, __LINE__, epnum, musb, hw_ep, epio);
-	}
 
 	csr = musb_readw(epio, MUSB_TXCSR);
 	if (csr & MUSB_TXCSR_TXPKTRDY)
@@ -233,29 +206,6 @@ static void cppi_trans_done_work(struct work_struct *work)
 	}
 }
 
-//enum dma_channel_status {
-//    /* unallocated */
-//    MUSB_DMA_STATUS_UNKNOWN,
-//    /* allocated ... but not busy, no errors */
-//    MUSB_DMA_STATUS_FREE,
-//    /* busy ... transactions are active */
-//    MUSB_DMA_STATUS_BUSY,
-//    /* transaction(s) aborted due to ... dma or memory bus error */
-//    MUSB_DMA_STATUS_BUS_ABORT,
-//    /* transaction(s) aborted due to ... core error or USB fault */
-//    MUSB_DMA_STATUS_CORE_ABORT
-//};
-
-///* host side ep0 states */
-//enum musb_h_ep0_state {
-//    MUSB_EP0_IDLE,
-//    MUSB_EP0_START,         /* expect ack of setup */
-//    MUSB_EP0_IN,            /* expect IN DATA */
-//    MUSB_EP0_OUT,           /* expect ack of OUT DATA */
-//    MUSB_EP0_STATUS,        /* expect ack of STATUS */
-//} __attribute__ ((packed));
-
-
 static enum hrtimer_restart cppi41_recheck_tx_req(struct hrtimer *timer)
 {
 	struct cppi41_dma_controller *controller;
@@ -273,25 +223,6 @@ static enum hrtimer_restart cppi41_recheck_tx_req(struct hrtimer *timer)
 			tx_check) {
 		bool empty;
 		struct musb_hw_ep *hw_ep = cppi41_channel->hw_ep;
-
-		if (print_dma_info)
-		{
-		    printk(KERN_ERR "DMA: status: %d, epnum: %d, musb->ep0_stage = %d, hw_ep->musb->ep0_state = %d\n",
-		            cppi41_channel->channel.status, hw_ep->epnum, musb->ep0_stage, hw_ep->musb->ep0_state);
-		    if (hw_ep->in_qh)
-		    {
-		        printk(KERN_ERR "in->ready: %d\n", hw_ep->in_qh->is_ready);
-		    }
-		    if (hw_ep->out_qh)
-		    {
-                printk(KERN_ERR "out->ready: %d\n", hw_ep->out_qh->is_ready);
-		    }
-		}
-
-//	    if (musb->suspended)
-//	    {
-//	        continue;
-//	    }
 
 		empty = musb_is_tx_fifo_empty(hw_ep);
 		if (empty) {

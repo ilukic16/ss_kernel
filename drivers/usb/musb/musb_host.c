@@ -2076,7 +2076,6 @@ static int musb_urb_enqueue(
 	struct urb			*urb,
 	gfp_t				mem_flags)
 {
-//	printk(KERN_ERR "musb_urb_enqueue - start \n");
 	unsigned long			flags;
 	struct musb			*musb = hcd_to_musb(hcd);
 	struct usb_host_endpoint	*hep = urb->ep;
@@ -2088,10 +2087,7 @@ static int musb_urb_enqueue(
 
 	/* host role must be active */
 	if (!is_host_active(musb) || !musb->is_active)
-	{
-//		printk(KERN_ERR "%s(%d): ENODEV\n", __FUNCTION__, __LINE__);
 		return -ENODEV;
-	}
 
 	spin_lock_irqsave(&musb->lock, flags);
 	ret = usb_hcd_link_urb_to_ep(hcd, urb);
@@ -2109,10 +2105,7 @@ static int musb_urb_enqueue(
 	 * except for the first urb queued after a config change.
 	 */
 	if (qh || ret)
-	{
-//		printk(KERN_ERR "%s(%d): ret = %d\n", __FUNCTION__, __LINE__, ret);
 		return ret;
-	}
 
 	/* Allocate and initialize qh, minimizing the work done each time
 	 * hw_ep gets reprogrammed, or with irqs blocked.  Then schedule it.
@@ -2125,7 +2118,6 @@ static int musb_urb_enqueue(
 		spin_lock_irqsave(&musb->lock, flags);
 		usb_hcd_unlink_urb_from_ep(hcd, urb);
 		spin_unlock_irqrestore(&musb->lock, flags);
-//		printk(KERN_ERR "%s(%d): ENOMEM\n", __FUNCTION__, __LINE__);
 		return -ENOMEM;
 	}
 
@@ -2150,7 +2142,6 @@ static int musb_urb_enqueue(
 				|| (usb_pipeout(urb->pipe) && musb->hb_iso_tx);
 		if (!ok) {
 			ret = -EMSGSIZE;
-//			printk(KERN_ERR "%s(%d): ret = -EMSGSIZE\n", __FUNCTION__, __LINE__);
 			goto done;
 		}
 		qh->maxpacket &= 0x7ff;
@@ -2241,14 +2232,9 @@ static int musb_urb_enqueue(
 		kfree(qh);
 		qh = NULL;
 		ret = 0;
-//		printk(KERN_ERR "%s(%d): ret = %d\n", __FUNCTION__, __LINE__, ret);
-	}
-	else
-	{
+	} else
 		ret = musb_schedule(musb, qh,
 				epd->bEndpointAddress & USB_ENDPOINT_DIR_MASK);
-//		printk(KERN_ERR "%s(%d): ret = %d\n", __FUNCTION__, __LINE__, ret);
-	}
 
 	if (ret == 0) {
 		urb->hcpriv = qh;
@@ -2265,7 +2251,6 @@ done:
 		spin_unlock_irqrestore(&musb->lock, flags);
 		kfree(qh);
 	}
-//	printk(KERN_ERR "%s(%d): end: ret = %d\n", __FUNCTION__, __LINE__, ret);
 	return ret;
 }
 
