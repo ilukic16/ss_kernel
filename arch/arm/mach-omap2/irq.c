@@ -247,7 +247,6 @@ out:
 		irqnr &= ACTIVEIRQ_MASK;
 
 		if (irqnr) {
-			u32 irq_hw = irqnr;
 			irqnr = irq_find_mapping(domain, irqnr);
 			handle_IRQ(irqnr, regs);
 		}

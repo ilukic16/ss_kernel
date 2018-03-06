@@ -156,7 +156,7 @@ do {								\
 		priv->data.active_slave)
 
 static int debug_level;
-module_param(debug_level, int, 0644);
+module_param(debug_level, int, 0);
 MODULE_PARM_DESC(debug_level, "cpsw debug level (NETIF_MSG bits)");
 
 static int ale_ageout = 10;
@@ -166,9 +166,6 @@ MODULE_PARM_DESC(ale_ageout, "cpsw ale ageout interval (seconds)");
 static int rx_packet_max = CPSW_MAX_PACKET_SIZE;
 module_param(rx_packet_max, int, 0);
 MODULE_PARM_DESC(rx_packet_max, "maximum receive packet size (bytes)");
-
-#define CPSW_DBG(...) if (debug_level > 10) \
-                        printk(__VA_ARGS__);
 
 struct cpsw_wr_regs {
 	u32	id_ver;
@@ -725,12 +722,10 @@ void cpsw_rx_handler(void *token, int len, int status)
 
 static irqreturn_t cpsw_interrupt(int irq, void *dev_id)
 {
-    CPSW_DBG(KERN_ERR "--- cpsw_interrupt: start\n");
 	struct cpsw_priv *priv = dev_id;
 
 	__raw_writel(0, &priv->wr_regs->rx_en);
 	if (priv->irq_enabled) {
-	    CPSW_DBG(KERN_ERR "--- cpsw_interrupt: disabling irqs\n");
 		disable_irq_nosync(priv->irqs_table[0]);
 		disable_irq_nosync(priv->irqs_table[1]);
 		disable_irq_nosync(priv->irqs_table[3]);
@@ -755,12 +750,10 @@ static irqreturn_t cpsw_interrupt(int irq, void *dev_id)
 
 static irqreturn_t cpsw_tx_interrupt(int irq, void *dev_id)
 {
-    CPSW_DBG(KERN_ERR "--- cpsw_tx_interrupt: start\n");
 	struct cpsw_priv *priv = dev_id;
 
 	__raw_writel(0, &priv->wr_regs->tx_en);
 	if (priv->irq_tx_enabled) {
-	    CPSW_DBG(KERN_ERR "--- cpsw_tx_interrupt: disabling irq\n");
 		disable_irq_nosync(priv->irqs_table[2]);
 		priv->irq_tx_enabled = false;
 	}
@@ -783,7 +776,6 @@ static irqreturn_t cpsw_tx_interrupt(int irq, void *dev_id)
 
 static int cpsw_poll(struct napi_struct *napi, int budget)
 {
-    CPSW_DBG(KERN_ERR "--- cpsw_poll: start\n");
 	struct cpsw_priv	*priv = napi_to_priv(napi);
 	int			num_rx;
 
@@ -796,7 +788,6 @@ static int cpsw_poll(struct napi_struct *napi, int budget)
 		cpdma_ctlr_eoi(priv->dma, CPDMA_EOI_RX);
 		prim_cpsw = cpsw_get_slave_priv(priv, 0);
 		if (!prim_cpsw->irq_enabled) {
-		    CPSW_DBG(KERN_ERR "--- cpsw_poll: enabling irqs\n");
 			prim_cpsw->irq_enabled = true;
 			enable_irq(priv->irqs_table[0]);
 			enable_irq(priv->irqs_table[1]);
@@ -812,7 +803,6 @@ static int cpsw_poll(struct napi_struct *napi, int budget)
 
 static int cpsw_tx_poll(struct napi_struct *napi, int budget)
 {
-    CPSW_DBG(KERN_ERR "--- cpsw_tx_poll: start\n");
 	struct cpsw_priv	*priv = napi_tx_to_priv(napi);
 	int			num_tx;
 
@@ -825,7 +815,6 @@ static int cpsw_tx_poll(struct napi_struct *napi, int budget)
 		cpdma_ctlr_eoi(priv->dma, CPDMA_EOI_TX);
 		prim_cpsw = cpsw_get_slave_priv(priv, 0);
 		if (!prim_cpsw->irq_tx_enabled) {
-		    CPSW_DBG(KERN_ERR "--- cpsw_tx_poll: enabling irq\n");
 			prim_cpsw->irq_tx_enabled = true;
 			enable_irq(priv->irqs_table[2]);
 		}
@@ -1241,7 +1230,6 @@ static void cpsw_slave_stop(struct cpsw_slave *slave, struct cpsw_priv *priv)
 
 static int cpsw_ndo_open(struct net_device *ndev)
 {
-    CPSW_DBG(KERN_ERR "------------------ cpsw_ndo_open is called\n");
 	struct cpsw_priv *priv = netdev_priv(ndev);
 	struct cpsw_priv *prim_cpsw;
 	int i, ret;
@@ -1327,7 +1315,6 @@ static int cpsw_ndo_open(struct net_device *ndev)
 	prim_cpsw = cpsw_get_slave_priv(priv, 0);
 	if (!prim_cpsw->irq_enabled) {
 		if ((priv == prim_cpsw) || !netif_running(prim_cpsw->ndev)) {
-	        CPSW_DBG(KERN_ERR "--- cpsw_ndo_open: rx enabling...\n");
 			prim_cpsw->irq_enabled = true;
 
 			enable_irq(prim_cpsw->irqs_table[0]);
@@ -1335,22 +1322,13 @@ static int cpsw_ndo_open(struct net_device *ndev)
 			enable_irq(prim_cpsw->irqs_table[3]);
 		}
 	}
-	else
-	{
-	    CPSW_DBG(KERN_ERR "--- cpsw_ndo_open: rx enabled already\n");
-	}
 
 	if (!prim_cpsw->irq_tx_enabled) {
 		if ((priv == prim_cpsw) || !netif_running(prim_cpsw->ndev)) {
-	        CPSW_DBG(KERN_ERR "--- cpsw_ndo_open: tx enabling...\n");
 			prim_cpsw->irq_tx_enabled = true;
 
 			enable_irq(prim_cpsw->irqs_table[2]);
 		}
-	}
-	else
-	{
-	    CPSW_DBG(KERN_ERR "--- cpsw_ndo_open: tx enabled already\n");
 	}
 
 	if (priv->data.dual_emac)

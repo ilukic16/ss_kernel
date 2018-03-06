@@ -634,37 +634,19 @@ static int claimintf(struct dev_state *ps, unsigned int ifnum)
 	struct usb_interface *intf;
 	int err;
 
-	printk(KERN_ERR "--- ifnum = %d\n", ifnum);
 	if (ifnum >= 8*sizeof(ps->ifclaimed))
-	{
-	    printk(KERN_ERR "??? invalid ifnum?\n");
 		return -EINVAL;
-	}
 	/* already claimed */
 	if (test_bit(ifnum, &ps->ifclaimed))
-	{
-        printk(KERN_ERR "*** interface already claimed\n");
 		return 0;
-	}
 
 	intf = usb_ifnum_to_if(dev, ifnum);
 	if (!intf)
-	{
-        printk(KERN_ERR "*** could not convert ifnum to if pointer\n");
 		err = -ENOENT;
-	}
 	else
-	{
-        printk(KERN_ERR "*** claiming interface... \n");
 		err = usb_driver_claim_interface(&usbfs_driver, intf, ps);
-		printk(KERN_ERR "*** err = %d\n", err);
-	}
 	if (err == 0)
-	{
-        printk(KERN_ERR "*** interface claimed!\n");
 		set_bit(ifnum, &ps->ifclaimed);
-        printk(KERN_ERR "*** if.name = %s, usb_dev.name = %s\n", dev_name(&(intf->dev)), dev_name(intf->usb_dev));
-	}
 	return err;
 }
 
@@ -700,7 +682,6 @@ static int checkintf(struct dev_state *ps, unsigned int ifnum)
 	dev_warn(&ps->dev->dev, "usbfs: process %d (%s) did not claim "
 		 "interface %u before use\n", task_pid_nr(current),
 		 current->comm, ifnum);
-	dump_stack();
 	return claimintf(ps, ifnum);
 }
 

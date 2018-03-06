@@ -1219,8 +1219,6 @@ int dpm_suspend(pm_message_t state)
 		dpm_save_failed_step(SUSPEND_SUSPEND);
 	} else
 		dpm_show_time(starttime, state, NULL);
-
-	printk(KERN_ERR "%s(%d): return!\n", __FUNCTION__, __LINE__);
 	return error;
 }
 
