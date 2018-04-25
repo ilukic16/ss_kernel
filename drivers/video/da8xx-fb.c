@@ -42,6 +42,7 @@
 #include <linux/lcm.h>
 #include <video/of_display_timing.h>
 #include <video/da8xx-fb.h>
+#include <linux/moduleparam.h>
 
 #ifdef CONFIG_FB_DA8XX_TDA998X
 #include <video/da8xx-tda998x-hdmi.h>
@@ -49,6 +50,9 @@
 
 #include <asm/div64.h>
 
+static bool force_sync = true;
+module_param(force_sync, bool, S_IWUSR | S_IRUSR);
+MODULE_PARM_DESC(force_sync, "Detect error and correct synchronization between raster lcdc and DMA");
 
 #define DRIVER_NAME "da8xx_lcdc"
 
@@ -61,6 +65,7 @@
 #define LCD_PL_LOAD_DONE		BIT(6)
 #define LCD_FIFO_UNDERFLOW		BIT(5)
 #define LCD_SYNC_LOST			BIT(2)
+#define LCD_RAS_FRAME_DONE		BIT(1)
 #define LCD_FRAME_DONE			BIT(0)
 
 /* LCD DMA Control Register */
@@ -1021,6 +1026,12 @@ static irqreturn_t lcdc_irq_handler_rev02(int irq, void *arg)
 				vsync_cb_handler(vsync_cb_arg);
 		}
 
+		if ((force_sync) && !((stat & LCD_END_OF_FRAME0) || (stat & LCD_END_OF_FRAME1))) {
+			printk(KERN_WARNING "lcdc: out of sync detected - syncing!\n");
+			lcd_disable_raster(DA8XX_FRAME_NOWAIT);
+			lcd_enable_raster();
+		}
+		
 		/* Set only when controller is disabled and at the end of
 		 * active frame
 		 */
