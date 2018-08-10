@@ -54,6 +54,10 @@ static bool force_sync = true;
 module_param(force_sync, bool, S_IWUSR | S_IRUSR);
 MODULE_PARM_DESC(force_sync, "Detect error and correct synchronization between raster lcdc and DMA");
 
+extern int spsp_pid;
+module_param(spsp_pid, int, S_IWUSR | S_IRUSR);
+MODULE_PARM_DESC(spsp_pid, "Spirosphere application pid");
+
 #define DRIVER_NAME "da8xx_lcdc"
 
 #define LCD_VERSION_1	1

@@ -23,6 +23,7 @@
 #include <linux/sysrq.h>
 #include <linux/init.h>
 #include <linux/nmi.h>
+#include <linux/sched.h>
 
 #define PANIC_TIMER_STEP 100
 #define PANIC_BLINK_SPD 18
@@ -35,6 +36,9 @@ static DEFINE_SPINLOCK(pause_on_oops_lock);
 
 int panic_timeout;
 EXPORT_SYMBOL_GPL(panic_timeout);
+
+int spsp_pid;
+EXPORT_SYMBOL(spsp_pid);
 
 ATOMIC_NOTIFIER_HEAD(panic_notifier_list);
 
@@ -393,6 +397,15 @@ void oops_exit(void)
 	do_oops_enter_exit();
 	print_oops_end_marker();
 	kmsg_dump(KMSG_DUMP_OOPS);
+
+	// get spirosphere task
+	struct task_struct * tsk = find_task_by_vpid(spsp_pid);
+	if (tsk) {
+		send_sig(SIGUSR1, tsk, 0);
+		printk(KERN_ERR "------ Sent signal to spirosphere! PID = %d\n", spsp_pid);
+	}
+	else
+		printk(KERN_ERR "------ Unable to get struct_task for spirosphere! PID = %d\n", spsp_pid);
 }
 
 #ifdef WANT_WARN_ON_SLOWPATH
