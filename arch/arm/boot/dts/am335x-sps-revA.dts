@@ -23,8 +23,6 @@
 		device_type = "memory";
 		reg = <0x80000000 0x10000000>; /* 0xBFFFFFFF>; /* 1 GB */
 	};
-	
-	
 		
 	am33xx_pinmux: pinmux@44e10800 
 	{
@@ -347,10 +345,10 @@
 				pinctrl-single,pins = <
 					0x164  (PULL_DISABLE | MUX_MODE7)	/* eCAP0_in_PWM0_out.eCAP0_in_PWM0_out  */
 				>;
-		         };
+		    };
 
 
-};
+    }; // pinmux
 
 	ocp {
 		uart0: serial@44e09000 {
@@ -573,7 +571,8 @@
 			};
 		};
 
- };	
+    }; // ocp
+    	
 	vbat: fixedregulator@0 {
 		compatible = "regulator-fixed";
 		regulator-name = "vbat";
@@ -626,33 +625,37 @@
 		board-ref-clock = <4>;
 	};
 
+    spsp_oops {
+        compatible = "spsp_oops";
+    };
+
 //	kim {
 //		compatible = "kim";
-	tibt {
-		compatible = "tibt";
-		nshutdown_gpio = <63>; /* Bank1, pin31 */
-		dev_name = "/dev/ttyO2";
-		flow_cntrl = <1>;
-//		baud_rate = <921600>; /*<115200>;*/
-		baud_rate = <3000000>; /*<115200>;*/
-	};
+    	tibt {
+    		compatible = "tibt";
+    		nshutdown_gpio = <63>; /* Bank1, pin31 */
+    		dev_name = "/dev/ttyO2";
+    		flow_cntrl = <1>;
+//		    baud_rate = <921600>; /*<115200>;*/
+    		baud_rate = <3000000>; /*<115200>;*/
+    	};
+    
+    	btwilink {
+    		compatible = "btwilink";
+    	};
+    
+    	sound {
+    		  compatible = "ti,tps2521-evm-audio";
+    		  ti,model = "AM33xx-EVM";
+    		  ti,audio-codec = <&tlv320aic3x>;
+    		  ti,mcasp-controller = <&mcasp0>;
+    		  ti,codec-clock-rate = <12000000>;
+    		  ti,audio-routing =
+    		    "Left DAC", "LOL Output Mixer";
+    	};
 
-	btwilink {
-		compatible = "btwilink";
-	};
-
-	sound {
-		  compatible = "ti,tps2521-evm-audio";
-		  ti,model = "AM33xx-EVM";
-		  ti,audio-codec = <&tlv320aic3x>;
-		  ti,mcasp-controller = <&mcasp0>;
-		  ti,codec-clock-rate = <12000000>;
-		  ti,audio-routing =
-		    "Left DAC", "LOL Output Mixer";
-	};
-
-};
-
+    }; // kim
+    
 #include "tps65910.dtsi"
 
 

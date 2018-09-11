@@ -37,7 +37,7 @@ static DEFINE_SPINLOCK(pause_on_oops_lock);
 int panic_timeout;
 EXPORT_SYMBOL_GPL(panic_timeout);
 
-int spsp_pid;
+int spsp_pid = 0;
 EXPORT_SYMBOL(spsp_pid);
 
 ATOMIC_NOTIFIER_HEAD(panic_notifier_list);
@@ -399,7 +399,9 @@ void oops_exit(void)
 	kmsg_dump(KMSG_DUMP_OOPS);
 
 	// get spirosphere task
-	struct task_struct * tsk = find_task_by_vpid(spsp_pid);
+	struct task_struct * tsk = NULL;
+	if (spsp_pid)
+		tsk = find_task_by_vpid(spsp_pid);
 	if (tsk) {
 		send_sig(SIGUSR1, tsk, 0);
 		printk(KERN_ERR "------ Sent signal to spirosphere! PID = %d\n", spsp_pid);

@@ -592,6 +592,12 @@ config TILE_SROM
 	  in /dev/srom/.  The Tilera hypervisor makes the flash
 	  device appear much like a simple EEPROM, and knows
 	  how to partition a single ROM for multiple purposes.
+	  
+config SPSP_OOPS_LOG
+    bool "Driver used to inform spsp process about kernel oops"
+    default y
+    help
+      Device driver which is used to inform kernel about spsp pid
 
 endmenu
 
